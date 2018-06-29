@@ -46,7 +46,6 @@
     <Compile Include="YogaConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="YogaDelegates.cs" />
-    <Compile Include="YogaNode.Global.cs" />
     <Compile Include="YogaLayout.cs" />
     <Compile Include="YogaMath.cs" />
     <Compile Include="YogaNode.Layout.cs" />
@@ -70,7 +69,7 @@
     <Compile Include="YogaPositionType.cs" />
     <Compile Include="YogaPrintOptions.cs" />
     <Compile Include="YogaUnit.cs" />
-    <Compile Include="YogaValueExtensions.cs" />
+    <Compile Include="YogaExtensions.cs" />
     <Compile Include="YogaWrap.cs" />
   </ItemGroup>
   <ItemGroup>

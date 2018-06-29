@@ -10,15 +10,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Marius.Yoga
 {
-    using System.Threading;
-    using static YogaGlobal;
-
     public partial class YogaNode : IEnumerable<YogaNode>
     {
+        public const float DefaultFlexGrow = 0.0f;
+        public const float DefaultFlexShrink = 0.0f;
+        public const float WebDefaultFlexShrink = 1.0f;
+
         private static int _instanceCount = 0;
 
         private YogaPrint _print;
@@ -231,11 +233,6 @@ namespace Marius.Yoga
             set { _children = new List<YogaNode>(value ?? Enumerable.Empty<YogaNode>()); }
         }
 
-        public int ChildrenCount
-        {
-            get { return _children.Count; }
-        }
-
         public YogaNode GetChild(int index) { return _children[index]; }
 
         public YogaNode NextChild
@@ -272,46 +269,51 @@ namespace Marius.Yoga
         public float? GetLeadingPosition(YogaFlexDirection axis, float? axisSize)
         {
             var leadingPosition = default(YogaValue);
-            if (FlexDirectionIsRow(axis))
+            if (axis.IsRow())
             {
                 leadingPosition = ComputedEdgeValue(_style.Position, YogaEdge.Start, YogaValue.Undefined);
                 if (leadingPosition.Unit != YogaUnit.Undefined)
-                    return ResolveValue(leadingPosition, axisSize);
+                    return leadingPosition.Resolve(axisSize);
             }
 
             leadingPosition = ComputedEdgeValue(_style.Position, Leading[axis], YogaValue.Undefined);
-            return leadingPosition.Unit == YogaUnit.Undefined ? 0.0f : ResolveValue(leadingPosition, axisSize);
+            return leadingPosition.Unit == YogaUnit.Undefined ? 0.0f : leadingPosition.Resolve(axisSize);
         }
 
         public float? GetTrailingPosition(YogaFlexDirection axis, float? axisSize)
         {
             var trailingPosition = default(YogaValue);
-            if (FlexDirectionIsRow(axis))
+            if (axis.IsRow())
             {
                 trailingPosition = ComputedEdgeValue(_style.Position, YogaEdge.End, YogaValue.Undefined);
                 if (trailingPosition.Unit != YogaUnit.Undefined)
-                    return ResolveValue(trailingPosition, axisSize);
+                    return trailingPosition.Resolve(axisSize);
             }
 
             trailingPosition = ComputedEdgeValue(_style.Position, Trailing[axis], YogaValue.Undefined);
-            return trailingPosition.Unit == YogaUnit.Undefined ? 0.0f : ResolveValue(trailingPosition, axisSize);
+            return trailingPosition.Unit == YogaUnit.Undefined ? 0.0f : trailingPosition.Resolve(axisSize);
+        }
+
+        public float? GetRelativePosition(YogaFlexDirection axis, float? axisSize)
+        {
+            return IsLeadingPositionDefined(axis) ? GetLeadingPosition(axis, axisSize) : -GetTrailingPosition(axis, axisSize);
         }
 
         public bool IsLeadingPositionDefined(YogaFlexDirection axis)
         {
-            return (FlexDirectionIsRow(axis) && ComputedEdgeValue(_style.Position, YogaEdge.Start, YogaValue.Undefined).Unit != YogaUnit.Undefined)
+            return (axis.IsRow() && ComputedEdgeValue(_style.Position, YogaEdge.Start, YogaValue.Undefined).Unit != YogaUnit.Undefined)
                 || ComputedEdgeValue(_style.Position, Leading[axis], YogaValue.Undefined).Unit != YogaUnit.Undefined;
         }
 
-        public bool IsTrailingPosDefined(YogaFlexDirection axis)
+        public bool IsTrailingPositionDefined(YogaFlexDirection axis)
         {
-            return (FlexDirectionIsRow(axis) && ComputedEdgeValue(_style.Position, YogaEdge.End, YogaValue.Undefined).Unit != YogaUnit.Undefined)
+            return (axis.IsRow() && ComputedEdgeValue(_style.Position, YogaEdge.End, YogaValue.Undefined).Unit != YogaUnit.Undefined)
                 || ComputedEdgeValue(_style.Position, Trailing[axis], YogaValue.Undefined).Unit != YogaUnit.Undefined;
         }
 
         public float? GetLeadingMargin(YogaFlexDirection axis, float? widthSize)
         {
-            if (FlexDirectionIsRow(axis) && _style.Margin[YogaEdge.Start].Unit != YogaUnit.Undefined)
+            if (axis.IsRow() && _style.Margin[YogaEdge.Start].Unit != YogaUnit.Undefined)
                 return ResolveValueMargin(_style.Margin[YogaEdge.Start], widthSize);
 
             return ResolveValueMargin(ComputedEdgeValue(_style.Margin, Leading[axis], YogaValue.Zero), widthSize);
@@ -319,7 +321,7 @@ namespace Marius.Yoga
 
         public float? GetTrailingMargin(YogaFlexDirection axis, float? widthSize)
         {
-            if (FlexDirectionIsRow(axis) && _style.Margin[YogaEdge.End].Unit != YogaUnit.Undefined)
+            if (axis.IsRow() && _style.Margin[YogaEdge.End].Unit != YogaUnit.Undefined)
                 return ResolveValueMargin(_style.Margin[YogaEdge.End], widthSize);
 
             return ResolveValueMargin(ComputedEdgeValue(_style.Margin, Trailing[axis], YogaValue.Zero), widthSize);
@@ -395,18 +397,13 @@ namespace Marius.Yoga
             _layout.Dimensions[index] = dimension;
         }
 
-        public float? GetRelativePosition(YogaFlexDirection axis, float? axisSize)
-        {
-            return IsLeadingPositionDefined(axis) ? GetLeadingPosition(axis, axisSize) : -GetTrailingPosition(axis, axisSize);
-        }
-
         public void SetPosition(YogaDirection direction, float? mainSize, float? crossSize, float? ownerWidth)
         {
             /* Root nodes should be always layouted as LTR, so we don't return negative
              * values. */
             var directionRespectingRoot = _owner != null ? direction : YogaDirection.LeftToRight;
-            var mainAxis = ResolveFlexDirection(_style.FlexDirection, directionRespectingRoot);
-            var crossAxis = FlexDirectionCross(mainAxis, directionRespectingRoot);
+            var mainAxis = _style.FlexDirection.ResolveFlexDirection(directionRespectingRoot);
+            var crossAxis = mainAxis.FlexDirectionCross(directionRespectingRoot);
 
             var relativePositionMain = GetRelativePosition(mainAxis, mainSize);
             var relativePositionCross = GetRelativePosition(crossAxis, crossSize);
@@ -420,7 +417,7 @@ namespace Marius.Yoga
         // Other methods
         public YogaValue GetMarginLeadingValue(YogaFlexDirection axis)
         {
-            if (FlexDirectionIsRow(axis) && _style.Margin[YogaEdge.Start].Unit != YogaUnit.Undefined)
+            if (axis.IsRow() && _style.Margin[YogaEdge.Start].Unit != YogaUnit.Undefined)
                 return _style.Margin[YogaEdge.Start];
 
             return _style.Margin[Leading[axis]];
@@ -428,7 +425,7 @@ namespace Marius.Yoga
 
         public YogaValue GetMarginTrailingValue(YogaFlexDirection axis)
         {
-            if (FlexDirectionIsRow(axis) && _style.Margin[YogaEdge.End].Unit != YogaUnit.Undefined)
+            if (axis.IsRow() && _style.Margin[YogaEdge.End].Unit != YogaUnit.Undefined)
                 return _style.Margin[YogaEdge.End];
 
             return _style.Margin[Trailing[axis]];
@@ -450,7 +447,7 @@ namespace Marius.Yoga
         {
             for (var dim = (int)YogaDimension.Width; dim < 2; dim++)
             {
-                if (_style.MaxDimensions[dim].Unit != YogaUnit.Undefined && ValueEqual(_style.MaxDimensions[dim], _style.MinDimensions[dim]))
+                if (_style.MaxDimensions[dim].Unit != YogaUnit.Undefined && _style.MaxDimensions[dim].Equals(_style.MinDimensions[dim]))
                     _resolvedDimensions[dim] = _style.MaxDimensions[dim];
                 else
                     _resolvedDimensions[dim] = _style.Dimensions[dim];
@@ -521,7 +518,7 @@ namespace Marius.Yoga
             _children.RemoveAt(index);
         }
 
-        public void MarkDirtyAndPropogate()
+        public void MarkDirty()
         {
             if (!_isDirty)
             {
@@ -529,7 +526,7 @@ namespace Marius.Yoga
 
                 SetLayoutComputedFlexBasis(default(float?));
                 if (_owner != null)
-                    _owner.MarkDirtyAndPropogate();
+                    _owner.MarkDirty();
             }
         }
 
@@ -576,7 +573,7 @@ namespace Marius.Yoga
 
         public float GetLeadingBorder(YogaFlexDirection axis)
         {
-            if (FlexDirectionIsRow(axis)
+            if (axis.IsRow()
                 && _style.Border[YogaEdge.Start].Unit != YogaUnit.Undefined
                 && _style.Border[YogaEdge.Start].Value != null
                 && _style.Border[YogaEdge.Start].Value >= 0.0f)
@@ -590,7 +587,7 @@ namespace Marius.Yoga
 
         public float GetTrailingBorder(YogaFlexDirection flexDirection)
         {
-            if (FlexDirectionIsRow(flexDirection)
+            if (flexDirection.IsRow()
                 && _style.Border[YogaEdge.End].Unit != YogaUnit.Undefined
                 && _style.Border[YogaEdge.End].Value != null
                 && _style.Border[YogaEdge.End].Value >= 0.0f)
@@ -604,8 +601,8 @@ namespace Marius.Yoga
 
         public float GetLeadingPadding(YogaFlexDirection axis, float? widthSize)
         {
-            var paddingEdgeStart = ResolveValue(_style.Padding[YogaEdge.Start], widthSize);
-            if (FlexDirectionIsRow(axis)
+            var paddingEdgeStart = _style.Padding[YogaEdge.Start].Resolve(widthSize);
+            if (axis.IsRow()
                 && _style.Padding[YogaEdge.Start].Unit != YogaUnit.Undefined
                 && paddingEdgeStart != null
                 && paddingEdgeStart >= 0.0f)
@@ -613,14 +610,14 @@ namespace Marius.Yoga
                 return paddingEdgeStart.Value;
             }
 
-            var resolvedValue = ResolveValue(ComputedEdgeValue(_style.Padding, Leading[axis], YogaValue.Zero), widthSize);
+            var resolvedValue = ComputedEdgeValue(_style.Padding, Leading[axis], YogaValue.Zero).Resolve(widthSize);
             return YogaMath.Max(resolvedValue, 0.0f);
         }
 
         public float GetTrailingPadding(YogaFlexDirection axis, float? widthSize)
         {
-            var paddingEdgeEnd = ResolveValue(_style.Padding[YogaEdge.End], widthSize);
-            if (FlexDirectionIsRow(axis)
+            var paddingEdgeEnd = _style.Padding[YogaEdge.End].Resolve(widthSize);
+            if (axis.IsRow()
                 && _style.Padding[YogaEdge.End].Unit != YogaUnit.Undefined
                 && paddingEdgeEnd != null
                 && paddingEdgeEnd >= 0.0f)
@@ -628,7 +625,7 @@ namespace Marius.Yoga
                 return paddingEdgeEnd.Value;
             }
 
-            var resolvedValue = ResolveValue(ComputedEdgeValue(_style.Padding, Trailing[axis], YogaValue.Zero), widthSize);
+            var resolvedValue = ComputedEdgeValue(_style.Padding, Trailing[axis], YogaValue.Zero).Resolve(widthSize);
             return YogaMath.Max(resolvedValue, 0.0f);
         }
 
@@ -728,6 +725,31 @@ namespace Marius.Yoga
                 if (cloneNodeCallback != null)
                     cloneNodeCallback(oldChild, newChild, this, i);
             }
+        }
+
+        private static float? ResolveValueMargin(YogaValue value, float? ownerSize)
+        {
+            return value.Unit == YogaUnit.Auto ? 0F : value.Resolve(ownerSize);
+        }
+
+        private static YogaValue ComputedEdgeValue(YogaArray<YogaValue> edges, YogaEdge edge, YogaValue defaultValue)
+        {
+            if (edges[edge].Unit != YogaUnit.Undefined)
+                return edges[edge];
+
+            if ((edge == YogaEdge.Top || edge == YogaEdge.Bottom) && edges[YogaEdge.Vertical].Unit != YogaUnit.Undefined)
+                return edges[YogaEdge.Vertical];
+
+            if ((edge == YogaEdge.Left || edge == YogaEdge.Right || edge == YogaEdge.Start || edge == YogaEdge.End) && edges[YogaEdge.Horizontal].Unit != YogaUnit.Undefined)
+                return edges[YogaEdge.Horizontal];
+
+            if (edges[YogaEdge.All].Unit != YogaUnit.Undefined)
+                return edges[YogaEdge.All];
+
+            if (edge == YogaEdge.Start || edge == YogaEdge.End)
+                return YogaValue.Undefined;
+
+            return defaultValue;
         }
     }
 }

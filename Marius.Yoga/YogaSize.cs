@@ -12,5 +12,14 @@ namespace Marius.Yoga
     {
         public float? Width;
         public float? Height;
+
+        public static YogaSize From(float? width, float? height)
+        {
+            return new YogaSize()
+            {
+                Width = width,
+                Height = height,
+            };
+        }
     }
 }

@@ -14,8 +14,6 @@ using System.Threading.Tasks;
 
 namespace Marius.Yoga
 {
-    using static YogaGlobal;
-
     public sealed class YogaLayout
     {
         public const int MaxCachedResultCount = 16;
@@ -37,7 +35,7 @@ namespace Marius.Yoga
         public YogaDirection LastOwnerDirection;
 
         public int NextCachedMeasurementsIndex;
-        public YogaArray<YogaCachedMeasurement> CachedMeasurements; // YG_MAX_CACHED_RESULT_COUNT
+        public YogaCachedMeasurement[] CachedMeasurements; // MaxCachedResultCount
         public YogaArray<float?> MeasuredDimensions; // 2
 
         public YogaCachedMeasurement CachedLayout;
@@ -64,7 +62,7 @@ namespace Marius.Yoga
             GenerationCount = 0;
             LastOwnerDirection = (YogaDirection)(-1);
             NextCachedMeasurementsIndex = 0;
-            CachedMeasurements = new YogaArray<YogaCachedMeasurement>(cached);
+            CachedMeasurements = cached;
             MeasuredDimensions = YogaArray.From(DefaultDimensionValues);
             CachedLayout = new YogaCachedMeasurement();
             DidUseLegacyFlag = false;
@@ -119,7 +117,7 @@ namespace Marius.Yoga
             GenerationCount = other.GenerationCount;
             LastOwnerDirection = other.LastOwnerDirection;
             NextCachedMeasurementsIndex = other.NextCachedMeasurementsIndex;
-            CachedMeasurements.CopyFrom(other.CachedMeasurements);
+            Array.Copy(other.CachedMeasurements, CachedMeasurements, CachedMeasurements.Length);
             MeasuredDimensions.CopyFrom(other.MeasuredDimensions);
             CachedLayout.CopyFrom(other.CachedLayout);
             DidUseLegacyFlag = other.DidUseLegacyFlag;
@@ -140,11 +138,13 @@ namespace Marius.Yoga
             GenerationCount = 0;
             LastOwnerDirection = YogaDirection.Inherit;
             NextCachedMeasurementsIndex = 0;
-            CachedMeasurements.Clear();
             MeasuredDimensions.Clear();
             CachedLayout.Clear();
             DidUseLegacyFlag = false;
             DoesLegacyStretchFlagAffectsLayout = false;
+
+            foreach (var item in CachedMeasurements)
+                item.Clear();
         }
 
         public override bool Equals(object obj)

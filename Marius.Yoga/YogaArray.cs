@@ -10,8 +10,6 @@ using System;
 
 namespace Marius.Yoga
 {
-    using static YogaGlobal;
-
     public static class YogaArray
     {
         public static YogaArray<T> From<T>(T[] other)
@@ -52,9 +50,17 @@ namespace Marius.Yoga
         {
             var areEqual = true;
             for (var i = 0; i < val1.Length && areEqual; ++i)
-                areEqual = ValueEqual(val1[i], val2[i]);
+                areEqual = val1[i].Equals(val2[i]);
 
             return areEqual;
+        }
+
+        private static bool FloatsEqual(float? a, float? b)
+        {
+            if (a != null && b != null)
+                return Math.Abs(a.Value - b.Value) < 0.0001f;
+
+            return a == null && b == null;
         }
     }
 

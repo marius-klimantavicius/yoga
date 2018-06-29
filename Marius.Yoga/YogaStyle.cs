@@ -14,28 +14,23 @@ using System.Threading.Tasks;
 
 namespace Marius.Yoga
 {
-    using static YogaGlobal;
-
     public sealed class YogaStyle
     {
-        private static readonly YogaValue ValueUndefined = new YogaValue { Value = 0, Unit = YogaUnit.Undefined };
-        private static readonly YogaValue ValueAuto = new YogaValue { Value = null, Unit = YogaUnit.Auto };
-
         private static readonly YogaValue[] DefaultEdgeValuesUnit = new YogaValue[]
         {
-            ValueUndefined,
-            ValueUndefined,
-            ValueUndefined,
-            ValueUndefined,
-            ValueUndefined,
-            ValueUndefined,
-            ValueUndefined,
-            ValueUndefined,
-            ValueUndefined,
+            YogaValue.Undefined,
+            YogaValue.Undefined,
+            YogaValue.Undefined,
+            YogaValue.Undefined,
+            YogaValue.Undefined,
+            YogaValue.Undefined,
+            YogaValue.Undefined,
+            YogaValue.Undefined,
+            YogaValue.Undefined,
         };
 
-        private static readonly YogaValue[] DefaultDimensionValuesAutoUnit = new YogaValue[] { ValueAuto, ValueAuto };
-        private static readonly YogaValue[] DefaultDimensionValuesUnit = new YogaValue[] { ValueUndefined, ValueUndefined };
+        private static readonly YogaValue[] DefaultDimensionValuesAutoUnit = new YogaValue[] { YogaValue.Auto, YogaValue.Auto };
+        private static readonly YogaValue[] DefaultDimensionValuesUnit = new YogaValue[] { YogaValue.Undefined, YogaValue.Undefined };
 
         public YogaDirection Direction;
         public YogaFlexDirection FlexDirection;
@@ -75,7 +70,7 @@ namespace Marius.Yoga
             Flex = null;
             FlexGrow = null;
             FlexShrink = null;
-            FlexBasis = ValueAuto;
+            FlexBasis = YogaValue.Auto;
             Margin = YogaArray.From(DefaultEdgeValuesUnit);
             Position = YogaArray.From(DefaultEdgeValuesUnit);
             Padding = YogaArray.From(DefaultEdgeValuesUnit);
@@ -132,7 +127,7 @@ namespace Marius.Yoga
                 self.FlexWrap == style.FlexWrap &&
                 self.Overflow == style.Overflow &&
                 self.Display == style.Display &&
-                ValueEqual(self.FlexBasis, style.FlexBasis) &&
+                self.FlexBasis.Equals(style.FlexBasis) &&
                 YogaArray.Equal(self.Margin, style.Margin) &&
                 YogaArray.Equal(self.Position, style.Position) &&
                 YogaArray.Equal(self.Padding, style.Padding) &&

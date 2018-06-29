@@ -74,5 +74,15 @@ namespace Marius.Yoga
             PointScaleFactor = oldConfig.PointScaleFactor;
             OnNodeCloned = oldConfig.OnNodeCloned;
         }
+
+        public bool IsExperimentalFeatureEnabled(YogaExperimentalFeature feature)
+        {
+            return ExperimentalFeatures[(int)feature];
+        }
+
+        public YogaConfig DeepClone()
+        {
+            return new YogaConfig(this);
+        }
     };
 }

@@ -19,11 +19,6 @@ namespace Marius.Yoga
     {
         private object _data;
 
-        public virtual void MarkDirty()
-        {
-            MarkDirtyAndPropogate();
-        }
-
         public void MarkHasNewLayout()
         {
             _hasNewLayout = true;
@@ -52,7 +47,7 @@ namespace Marius.Yoga
                 if (_style.Direction != value)
                 {
                     _style.Direction = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -69,7 +64,7 @@ namespace Marius.Yoga
                 if (_style.FlexDirection != value)
                 {
                     _style.FlexDirection = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -86,7 +81,7 @@ namespace Marius.Yoga
                 if (_style.JustifyContent != value)
                 {
                     _style.JustifyContent = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -103,7 +98,7 @@ namespace Marius.Yoga
                 if (_style.Display != value)
                 {
                     _style.Display = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -120,7 +115,7 @@ namespace Marius.Yoga
                 if (_style.AlignItems != value)
                 {
                     _style.AlignItems = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -137,7 +132,7 @@ namespace Marius.Yoga
                 if (_style.AlignSelf != value)
                 {
                     _style.AlignSelf = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -154,7 +149,7 @@ namespace Marius.Yoga
                 if (_style.AlignContent != value)
                 {
                     _style.AlignContent = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -171,7 +166,7 @@ namespace Marius.Yoga
                 if (_style.PositionType != value)
                 {
                     _style.PositionType = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -188,7 +183,7 @@ namespace Marius.Yoga
                 if (_style.FlexWrap != value)
                 {
                     _style.FlexWrap = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -203,7 +198,7 @@ namespace Marius.Yoga
                 if (_style.Flex != value)
                 {
                     _style.Flex = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -223,7 +218,7 @@ namespace Marius.Yoga
                 if (_style.FlexGrow != value)
                 {
                     _style.FlexGrow = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -243,7 +238,7 @@ namespace Marius.Yoga
                 if (_style.FlexShrink != value)
                 {
                     _style.FlexShrink = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -261,7 +256,7 @@ namespace Marius.Yoga
                 if (current.Unit != value.Unit || (value.Unit != YogaUnit.Undefined && current.Value != value.Value))
                 {
                     _style.FlexBasis = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -279,7 +274,7 @@ namespace Marius.Yoga
                 if (current.Unit != value.Unit || (value.Unit != YogaUnit.Undefined && current.Value != value.Value))
                 {
                     _style.Dimensions[YogaDimension.Width] = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -297,7 +292,7 @@ namespace Marius.Yoga
                 if (current.Unit != value.Unit || (value.Unit != YogaUnit.Undefined && current.Value != value.Value))
                 {
                     _style.Dimensions[YogaDimension.Height] = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -315,7 +310,7 @@ namespace Marius.Yoga
                 if (current.Unit != value.Unit || (value.Unit != YogaUnit.Undefined && current.Value != value.Value))
                 {
                     _style.MaxDimensions[YogaDimension.Width] = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -333,7 +328,7 @@ namespace Marius.Yoga
                 if (current.Unit != value.Unit || (value.Unit != YogaUnit.Undefined && current.Value != value.Value))
                 {
                     _style.MaxDimensions[YogaDimension.Height] = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -351,7 +346,7 @@ namespace Marius.Yoga
                 if (current.Unit != value.Unit || (value.Unit != YogaUnit.Undefined && current.Value != value.Value))
                 {
                     _style.MinDimensions[YogaDimension.Width] = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -369,7 +364,7 @@ namespace Marius.Yoga
                 if (current.Unit != value.Unit || (value.Unit != YogaUnit.Undefined && current.Value != value.Value))
                 {
                     _style.MinDimensions[YogaDimension.Height] = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -386,7 +381,7 @@ namespace Marius.Yoga
                 if (_style.AspectRatio != value)
                 {
                     _style.AspectRatio = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }
@@ -444,7 +439,7 @@ namespace Marius.Yoga
                 if (_style.Overflow != value)
                 {
                     _style.Overflow = value;
-                    MarkDirtyAndPropogate();
+                    MarkDirty();
                 }
             }
         }

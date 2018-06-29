@@ -10,8 +10,6 @@ using System;
 
 namespace Marius.Yoga
 {
-    using static YogaGlobal;
-
     public sealed class YogaCachedMeasurement
     {
         public float? AvailableWidth;
@@ -69,10 +67,10 @@ namespace Marius.Yoga
         {
             AvailableWidth = 0;
             AvailableHeight = 0;
-            WidthMeasureMode = 0;
-            HeightMeasureMode = 0;
-            ComputedWidth = 0;
-            ComputedHeight = 0;
+            WidthMeasureMode = (YogaMeasureMode)(-1);
+            HeightMeasureMode = (YogaMeasureMode)(-1);
+            ComputedWidth = -1;
+            ComputedHeight = -1;
         }
 
         public override bool Equals(object obj)
