@@ -123,7 +123,7 @@ namespace Marius.Yoga
                     originalNode.RoundToPixelGrid(originalNode.Config.PointScaleFactor, 0.0f, 0.0f);
 
                     // Set whether the two layouts are different or not.
-                    SetLayoutDoesLegacyFlagAffectsLayout(!originalNode.IsLayoutTreeEqualToNode(this));
+                    Layout.DoesLegacyStretchFlagAffectsLayout = !originalNode.IsLayoutTreeEqualToNode(this);
                 }
             }
         }
@@ -412,7 +412,7 @@ namespace Marius.Yoga
 
             // Set the resolved resolution in the node's layout.
             var direction = ResolveDirection(ownerDirection);
-            SetLayoutDirection(direction);
+            Layout.Direction = direction;
 
             var flexRowDirection = YogaFlexDirection.Row.ResolveFlexDirection(direction);
             var flexColumnDirection = YogaFlexDirection.Column.ResolveFlexDirection(direction);
@@ -470,7 +470,7 @@ namespace Marius.Yoga
             // At this point we know we're going to perform work. Ensure that each child has a mutable copy.
             CloneChildrenIfNeeded();
             // Reset layout flags, as they could have changed.
-            SetLayoutHadOverflow(false);
+            Layout.HadOverflow = false;
 
             // STEP 1: CALCULATE VALUES FOR REMAINDER OF ALGORITHM
             var mainAxis = Style.FlexDirection.ResolveFlexDirection(direction);
@@ -591,7 +591,7 @@ namespace Marius.Yoga
                         }
 
                         if (Config.UseLegacyStretchBehaviour)
-                            SetLayoutDidUseLegacyFlag(true);
+                            Layout.DidUseLegacyFlag = true;
 
                         sizeBasedOnContent = !Config.UseLegacyStretchBehaviour;
                     }
@@ -627,7 +627,7 @@ namespace Marius.Yoga
                         config);
                 }
 
-                SetLayoutHadOverflow(Layout.HadOverflow | (collectedFlexItemsValues.RemainingFreeSpace < 0));
+                Layout.HadOverflow = Layout.HadOverflow || (collectedFlexItemsValues.RemainingFreeSpace < 0);
 
                 // STEP 6: MAIN-AXIS JUSTIFICATION & CROSS-AXIS SIZE DETERMINATION
 
@@ -710,7 +710,7 @@ namespace Marius.Yoga
                             // For a relative children, we're either using alignItems (owner) or
                             // alignSelf (child) in order to determine the position in the cross
                             // axis
-                            var alignItem = AlignItem(child);
+                            var alignItem = GetAlign(child);
 
                             // If the child uses align stretch, we need to lay it out one more
                             // time, this time
@@ -873,7 +873,7 @@ namespace Marius.Yoga
                                 lineHeight = YogaMath.Max(lineHeight, child.Layout.MeasuredDimensions[Dimension[crossAxis]] + child.GetMarginForAxis(crossAxis, availableInnerWidth));
                             }
 
-                            if (AlignItem(child) == YogaAlign.Baseline)
+                            if (GetAlign(child) == YogaAlign.Baseline)
                             {
                                 var ascent = CalculateBaseline(child) + child.GetLeadingMargin(YogaFlexDirection.Column, availableInnerWidth);
                                 var descent = child.Layout.MeasuredDimensions[YogaDimension.Height] + child.GetMarginForAxis(YogaFlexDirection.Column, availableInnerWidth) - ascent;
@@ -897,7 +897,7 @@ namespace Marius.Yoga
 
                             if (child.Style.PositionType == YogaPositionType.Relative)
                             {
-                                switch (AlignItem(child))
+                                switch (GetAlign(child))
                                 {
                                     case YogaAlign.FlexStart:
                                         {
@@ -1246,7 +1246,10 @@ namespace Marius.Yoga
             }
         }
 
-        private float? CalculateAvailableInnerDim(YogaFlexDirection axis, float? availableDim, float? ownerDim)
+        private float? CalculateAvailableInnerDim(
+            YogaFlexDirection axis, 
+            float? availableDim, 
+            float? ownerDim)
         {
             var direction = axis.IsRow() ? YogaFlexDirection.Row : YogaFlexDirection.Column;
             var dimension = axis.IsRow() ? YogaDimension.Width : YogaDimension.Height;
@@ -1341,8 +1344,8 @@ namespace Marius.Yoga
 
                 if (child == singleFlexChild)
                 {
-                    child.SetLayoutComputedFlexBasisGeneration(gCurrentGenerationCount);
-                    child.SetLayoutComputedFlexBasis(0);
+                    child.Layout.ComputedFlexBasisGeneration = gCurrentGenerationCount;
+                    child.Layout.ComputedFlexBasis = 0;
                 }
                 else
                 {
@@ -1362,7 +1365,10 @@ namespace Marius.Yoga
             }
         }
 
-        private float? BoundAxisWithinMinAndMax(YogaFlexDirection axis, float? value, float? axisSize)
+        private float? BoundAxisWithinMinAndMax(
+            YogaFlexDirection axis, 
+            float? value, 
+            float? axisSize)
         {
             var min = default(float?);
             var max = default(float?);
@@ -1391,18 +1397,21 @@ namespace Marius.Yoga
         // Like YGNodeBoundAxisWithinMinAndMax but also ensures that the value doesn't go
         // below the
         // padding and border amount.
-        private float? BoundAxis(YogaFlexDirection axis, float? value, float? axisSize, float? widthSize)
+        private float? BoundAxis(
+            YogaFlexDirection axis, 
+            float? value, 
+            float? axisSize, 
+            float? widthSize)
         {
             return YogaMath.Max(BoundAxisWithinMinAndMax(axis, value, axisSize), GetPaddingAndBorderForAxis(axis, widthSize));
         }
 
-        private void SetChildTrailingPosition(YogaNode child, YogaFlexDirection axis)
-        {
-            var size = child.Layout.MeasuredDimensions[Dimension[axis]];
-            child.SetLayoutPosition(Layout.MeasuredDimensions[Dimension[axis]] - size - child.Layout.Position[Position[axis]], Trailing[axis]);
-        }
-
-        private void ConstrainMaxSizeForMode(YogaFlexDirection axis, float? ownerAxisSize, float? ownerWidth, ref YogaMeasureMode mode, ref float? size)
+        private void ConstrainMaxSizeForMode(
+            YogaFlexDirection axis, 
+            float? ownerAxisSize, 
+            float? ownerWidth, 
+            ref YogaMeasureMode mode, 
+            ref float? size)
         {
             var maxSize = Style.MaxDimensions[Dimension[axis]].Resolve(ownerAxisSize) + GetMarginForAxis(axis, ownerWidth);
             switch (mode)
@@ -1453,20 +1462,20 @@ namespace Marius.Yoga
                     && child.Layout.ComputedFlexBasisGeneration != gCurrentGenerationCount))
                 {
                     var paddingAndBorder = child.GetPaddingAndBorderForAxis(mainAxis, ownerWidth);
-                    child.SetLayoutComputedFlexBasis(YogaMath.Max(resolvedFlexBasis, paddingAndBorder));
+                    child.Layout.ComputedFlexBasis = YogaMath.Max(resolvedFlexBasis, paddingAndBorder);
                 }
             }
             else if (isMainAxisRow && isRowStyleDimDefined)
             {
                 // The width is definite, so use that as the flex basis.
-                child.SetLayoutComputedFlexBasis(YogaMath.Max(
+                child.Layout.ComputedFlexBasis = (YogaMath.Max(
                     child.GetResolvedDimension(YogaDimension.Width).Resolve(ownerWidth),
                     child.GetPaddingAndBorderForAxis(YogaFlexDirection.Row, ownerWidth)));
             }
             else if (!isMainAxisRow && isColumnStyleDimDefined)
             {
                 // The height is definite, so use that as the flex basis.
-                child.SetLayoutComputedFlexBasis(YogaMath.Max(
+                child.Layout.ComputedFlexBasis = (YogaMath.Max(
                     child.GetResolvedDimension(YogaDimension.Height).Resolve(ownerHeight),
                     child.GetPaddingAndBorderForAxis(YogaFlexDirection.Column, ownerWidth)));
             }
@@ -1534,7 +1543,7 @@ namespace Marius.Yoga
                 // axis to be measured exactly with the available inner width
 
                 var hasExactWidth = width != null && widthMode == YogaMeasureMode.Exactly;
-                var childWidthStretch = AlignItem(child) == YogaAlign.Stretch && childWidthMeasureMode != YogaMeasureMode.Exactly;
+                var childWidthStretch = GetAlign(child) == YogaAlign.Stretch && childWidthMeasureMode != YogaMeasureMode.Exactly;
                 if (!isMainAxisRow && !isRowStyleDimDefined && hasExactWidth && childWidthStretch)
                 {
                     childWidth = width;
@@ -1547,7 +1556,7 @@ namespace Marius.Yoga
                 }
 
                 var hasExactHeight = height != null && heightMode == YogaMeasureMode.Exactly;
-                var childHeightStretch = AlignItem(child) == YogaAlign.Stretch && childHeightMeasureMode != YogaMeasureMode.Exactly;
+                var childHeightStretch = GetAlign(child) == YogaAlign.Stretch && childHeightMeasureMode != YogaMeasureMode.Exactly;
                 if (isMainAxisRow && !isColumnStyleDimDefined && hasExactHeight && childHeightStretch)
                 {
                     childHeight = height;
@@ -1576,10 +1585,10 @@ namespace Marius.Yoga
                     "measure",
                     config);
 
-                child.SetLayoutComputedFlexBasis(YogaMath.Max(child.Layout.MeasuredDimensions[Dimension[mainAxis]], child.GetPaddingAndBorderForAxis(mainAxis, ownerWidth)));
+                child.Layout.ComputedFlexBasis = (YogaMath.Max(child.Layout.MeasuredDimensions[Dimension[mainAxis]], child.GetPaddingAndBorderForAxis(mainAxis, ownerWidth)));
             }
 
-            child.SetLayoutComputedFlexBasisGeneration(gCurrentGenerationCount);
+            child.Layout.ComputedFlexBasisGeneration = gCurrentGenerationCount;
         }
 
         private static float? CalculateBaseline(YogaNode node)
@@ -1605,7 +1614,7 @@ namespace Marius.Yoga
                 if (child.Style.PositionType == YogaPositionType.Absolute)
                     continue;
 
-                if (node.AlignItem(child) == YogaAlign.Baseline)
+                if (node.GetAlign(child) == YogaAlign.Baseline)
                 {
                     baselineChild = child;
                     break;
@@ -1937,7 +1946,7 @@ namespace Marius.Yoga
                   && !currentRelativeChild.IsStyleDimensionDefined(crossAxis, availableInnerCrossDim)
                   && measureModeCrossDim == YogaMeasureMode.Exactly
                   && !(isNodeFlexWrap && flexBasisOverflows)
-                  && AlignItem(currentRelativeChild) == YogaAlign.Stretch
+                  && GetAlign(currentRelativeChild) == YogaAlign.Stretch
                   && currentRelativeChild.GetMarginLeadingValue(crossAxis).Unit != YogaUnit.Auto
                   && currentRelativeChild.GetMarginTrailingValue(crossAxis).Unit != YogaUnit.Auto)
                 {
@@ -1976,7 +1985,7 @@ namespace Marius.Yoga
                     ref childCrossSize);
 
                 var requiresStretchLayout = !currentRelativeChild.IsStyleDimensionDefined(crossAxis, availableInnerCrossDim)
-                    && AlignItem(currentRelativeChild) == YogaAlign.Stretch
+                    && GetAlign(currentRelativeChild) == YogaAlign.Stretch
                     && currentRelativeChild.GetMarginLeadingValue(crossAxis).Unit != YogaUnit.Auto
                     && currentRelativeChild.GetMarginTrailingValue(crossAxis).Unit != YogaUnit.Auto;
 
@@ -2000,7 +2009,7 @@ namespace Marius.Yoga
                     "flex",
                     config);
 
-                SetLayoutHadOverflow(Layout.HadOverflow || currentRelativeChild.Layout.HadOverflow);
+                Layout.HadOverflow = Layout.HadOverflow || currentRelativeChild.Layout.HadOverflow;
             }
 
             return deltaFreeSpace;
@@ -2316,11 +2325,11 @@ namespace Marius.Yoga
                     Leading[crossAxis]);
 
             }
-            else if (!child.IsLeadingPositionDefined(crossAxis) && AlignItem(child) == YogaAlign.Center)
+            else if (!child.IsLeadingPositionDefined(crossAxis) && GetAlign(child) == YogaAlign.Center)
             {
                 child.SetLayoutPosition((Layout.MeasuredDimensions[Dimension[crossAxis]] - child.Layout.MeasuredDimensions[Dimension[crossAxis]]) / 2.0f, Leading[crossAxis]);
             }
-            else if (!child.IsLeadingPositionDefined(crossAxis) && ((AlignItem(child) == YogaAlign.FlexEnd) ^ (Style.FlexWrap == YogaWrap.WrapReverse)))
+            else if (!child.IsLeadingPositionDefined(crossAxis) && ((GetAlign(child) == YogaAlign.FlexEnd) ^ (Style.FlexWrap == YogaWrap.WrapReverse)))
             {
                 child.SetLayoutPosition((Layout.MeasuredDimensions[Dimension[crossAxis]] - child.Layout.MeasuredDimensions[Dimension[crossAxis]]), Leading[crossAxis]);
             }
@@ -2368,7 +2377,12 @@ namespace Marius.Yoga
             return false;
         }
 
-        private YogaAlign AlignItem(YogaNode child)
+        private float? GetPaddingAndBorderForAxis(YogaFlexDirection axis, float? widthSize)
+        {
+            return GetLeadingPaddingAndBorder(axis, widthSize) + GetTrailingPaddingAndBorder(axis, widthSize);
+        }
+
+        private YogaAlign GetAlign(YogaNode child)
         {
             var align = child.Style.AlignSelf == YogaAlign.Auto
                 ? Style.AlignItems
@@ -2379,35 +2393,6 @@ namespace Marius.Yoga
                 return YogaAlign.FlexStart;
 
             return align;
-        }
-
-        private float? GetPaddingAndBorderForAxis(YogaFlexDirection axis, float? widthSize)
-        {
-            return GetLeadingPaddingAndBorder(axis, widthSize) + GetTrailingPaddingAndBorder(axis, widthSize);
-        }
-
-        private YogaNode DeepClone()
-        {
-            var node = new YogaNode(this, null);
-            var vec = new List<YogaNode>(Children.Count);
-
-            var childNode = default(YogaNode);
-            foreach (var item in Children)
-            {
-                childNode = item.DeepClone();
-                childNode.Owner = node;
-                vec.Add(childNode);
-            }
-
-            node.Children = vec;
-
-            if (Config != null)
-                node.Config = Config.DeepClone();
-
-            if (NextChild != null)
-                node.NextChild = NextChild.DeepClone();
-
-            return node;
         }
 
         private void RoundToPixelGrid(float pointScaleFactor, float? absoluteLeft, float? absoluteTop)
@@ -2462,6 +2447,30 @@ namespace Marius.Yoga
                 var child = GetChild(i);
                 child.RoundToPixelGrid(pointScaleFactor, absoluteNodeLeft, absoluteNodeTop);
             }
+        }
+
+        private YogaNode DeepClone()
+        {
+            var node = new YogaNode(this, null);
+            var vec = new List<YogaNode>(Children.Count);
+
+            var childNode = default(YogaNode);
+            foreach (var item in Children)
+            {
+                childNode = item.DeepClone();
+                childNode.Owner = node;
+                vec.Add(childNode);
+            }
+
+            node.Children = vec;
+
+            if (Config != null)
+                node.Config = Config.DeepClone();
+
+            if (NextChild != null)
+                node.NextChild = NextChild.DeepClone();
+
+            return node;
         }
 
         private static bool MeasureModeSizeIsExactAndMatchesOldMeasuredSize(YogaMeasureMode sizeMode, float? size, float? lastComputedSize)

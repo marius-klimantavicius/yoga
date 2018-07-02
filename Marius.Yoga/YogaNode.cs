@@ -129,8 +129,8 @@ namespace Marius.Yoga
 
             if (_config.UseWebDefaults)
             {
-                SetStyleFlexDirection(YogaFlexDirection.Row);
-                SetStyleAlignContent(YogaAlign.Stretch);
+                Style.FlexDirection = YogaFlexDirection.Row;
+                Style.AlignContent = YogaAlign.Stretch;
             }
         }
 
@@ -226,6 +226,8 @@ namespace Marius.Yoga
             get { return _owner; }
             set { _owner = value; }
         }
+
+        public YogaNode Parent { get { return _owner; } }
 
         public List<YogaNode> Children
         {
@@ -332,89 +334,6 @@ namespace Marius.Yoga
             return GetLeadingMargin(axis, widthSize) + GetTrailingMargin(axis, widthSize);
         }
 
-        public void SetStyleFlexDirection(YogaFlexDirection direction)
-        {
-            _style.FlexDirection = direction;
-        }
-
-        public void SetStyleAlignContent(YogaAlign alignContent)
-        {
-            _style.AlignContent = alignContent;
-        }
-
-        public void SetLayoutDirection(YogaDirection direction)
-        {
-            _layout.Direction = direction;
-        }
-
-        public void SetLayoutMargin(float? margin, YogaEdge index)
-        {
-            _layout.Margin[index] = margin;
-        }
-
-        public void SetLayoutBorder(float border, YogaEdge index)
-        {
-            _layout.Border[index] = border;
-        }
-
-        public void SetLayoutPadding(float padding, YogaEdge index)
-        {
-            _layout.Padding[index] = padding;
-        }
-
-        public void SetLayoutLastOwnerDirection(YogaDirection direction)
-        {
-            _layout.LastOwnerDirection = direction;
-        }
-
-        public void SetLayoutComputedFlexBasis(float? computedFlexBasis)
-        {
-            _layout.ComputedFlexBasis = computedFlexBasis;
-        }
-
-        public void SetLayoutPosition(float? position, YogaEdge index)
-        {
-            _layout.Position[(int)index] = position;
-        }
-
-        public void SetLayoutComputedFlexBasisGeneration(uint computedFlexBasisGeneration)
-        {
-            _layout.ComputedFlexBasisGeneration = computedFlexBasisGeneration;
-        }
-
-        public void SetLayoutMeasuredDimension(float? measuredDimension, YogaDimension index)
-        {
-            _layout.MeasuredDimensions[index] = measuredDimension;
-        }
-
-        public void SetLayoutHadOverflow(bool hadOverflow)
-        {
-            _layout.HadOverflow = hadOverflow;
-        }
-
-        public void SetLayoutDimension(float? dimension, YogaDimension index)
-        {
-            _layout.Dimensions[index] = dimension;
-        }
-
-        public void SetPosition(YogaDirection direction, float? mainSize, float? crossSize, float? ownerWidth)
-        {
-            /* Root nodes should be always layouted as LTR, so we don't return negative
-             * values. */
-            var directionRespectingRoot = _owner != null ? direction : YogaDirection.LeftToRight;
-            var mainAxis = _style.FlexDirection.ResolveFlexDirection(directionRespectingRoot);
-            var crossAxis = mainAxis.FlexDirectionCross(directionRespectingRoot);
-
-            var relativePositionMain = GetRelativePosition(mainAxis, mainSize);
-            var relativePositionCross = GetRelativePosition(crossAxis, crossSize);
-
-            SetLayoutPosition((GetLeadingMargin(mainAxis, ownerWidth) + relativePositionMain), Leading[mainAxis]);
-            SetLayoutPosition((GetTrailingMargin(mainAxis, ownerWidth) + relativePositionMain), Trailing[mainAxis]);
-            SetLayoutPosition((GetLeadingMargin(crossAxis, ownerWidth) + relativePositionCross), Leading[crossAxis]);
-            SetLayoutPosition((GetTrailingMargin(crossAxis, ownerWidth) + relativePositionCross), Trailing[crossAxis]);
-        }
-
-        // Other methods
         public YogaValue GetMarginLeadingValue(YogaFlexDirection axis)
         {
             if (axis.IsRow() && _style.Margin[YogaEdge.Start].Unit != YogaUnit.Undefined)
@@ -429,146 +348,6 @@ namespace Marius.Yoga
                 return _style.Margin[YogaEdge.End];
 
             return _style.Margin[Trailing[axis]];
-        }
-
-        public YogaValue ResolveFlexBasis()
-        {
-            var flexBasis = _style.FlexBasis;
-            if (flexBasis.Unit != YogaUnit.Auto && flexBasis.Unit != YogaUnit.Undefined)
-                return flexBasis;
-
-            if (_style.Flex != null && _style.Flex.Value > 0.0f)
-                return _config.UseWebDefaults ? YogaValue.Auto : YogaValue.Zero;
-
-            return YogaValue.Auto;
-        }
-
-        public void ResolveDimension()
-        {
-            for (var dim = (int)YogaDimension.Width; dim < 2; dim++)
-            {
-                if (_style.MaxDimensions[dim].Unit != YogaUnit.Undefined && _style.MaxDimensions[dim].Equals(_style.MinDimensions[dim]))
-                    _resolvedDimensions[dim] = _style.MaxDimensions[dim];
-                else
-                    _resolvedDimensions[dim] = _style.Dimensions[dim];
-            }
-        }
-
-        public YogaDirection ResolveDirection(YogaDirection ownerDirection)
-        {
-            if (_style.Direction == YogaDirection.Inherit)
-                return ownerDirection > YogaDirection.Inherit ? ownerDirection : YogaDirection.LeftToRight;
-
-            return _style.Direction;
-        }
-
-        public int IndexOf(YogaNode node)
-        {
-            return _children.IndexOf(node);
-        }
-
-        public void Clear()
-        {
-            foreach (var item in _children)
-                item._owner = null;
-
-            _children.Clear();
-        }
-
-        public void ReplaceChild(YogaNode oldChild, YogaNode newChild)
-        {
-            var index = _children.IndexOf(oldChild);
-            if (index < 0)
-                return;
-
-            newChild.Owner = this;
-            _children[index] = newChild;
-        }
-
-        public void ReplaceChild(YogaNode child, int index)
-        {
-            child.Owner = this;
-            _children[index] = child;
-        }
-
-        public void Insert(int index, YogaNode child)
-        {
-            if (child.Owner != null)
-                throw new InvalidOperationException("Child already has a owner, it must be removed first.");
-
-            if (_measure != null)
-                throw new InvalidOperationException("Cannot add child: Nodes with measure functions cannot have children.");
-
-            child.Owner = this;
-            _children.Insert(index, child);
-        }
-
-        public bool Remove(YogaNode child)
-        {
-            if (child.Owner == this)
-                child.Owner = null;
-
-            return _children.Remove(child);
-        }
-
-        public void RemoveAt(int index)
-        {
-            var child = _children[index];
-            child.Owner = null;
-            _children.RemoveAt(index);
-        }
-
-        public void MarkDirty()
-        {
-            if (!_isDirty)
-            {
-                IsDirty = true;
-
-                SetLayoutComputedFlexBasis(default(float?));
-                if (_owner != null)
-                    _owner.MarkDirty();
-            }
-        }
-
-        public void MarkDirtyAndPropogateDownwards()
-        {
-            _isDirty = true;
-            foreach (var item in _children)
-                item.MarkDirtyAndPropogateDownwards();
-        }
-
-        public float ResolveFlexGrow()
-        {
-            // Root nodes flexGrow should always be 0
-            if (_owner == null)
-                return 0.0f;
-
-            if (_style.FlexGrow != null)
-                return _style.FlexGrow.Value;
-
-            if (_style.Flex != null && _style.Flex.Value > 0.0f)
-                return _style.Flex.Value;
-
-            return DefaultFlexGrow;
-        }
-
-        public float ResolveFlexShrink()
-        {
-            if (_owner == null)
-                return 0.0f;
-
-            if (_style.FlexShrink != null)
-                return _style.FlexShrink.Value;
-
-            if (!_config.UseWebDefaults && _style.Flex != null && _style.Flex.Value < 0.0f)
-                return -_style.Flex.Value;
-
-            return _config.UseWebDefaults ? WebDefaultFlexShrink : DefaultFlexShrink;
-        }
-
-        public bool IsNodeFlexible()
-        {
-            return ((_style.PositionType == YogaPositionType.Relative) && (ResolveFlexGrow() != 0 || ResolveFlexShrink() != 0));
         }
 
         public float GetLeadingBorder(YogaFlexDirection axis)
@@ -639,6 +418,71 @@ namespace Marius.Yoga
             return GetTrailingPadding(axis, widthSize) + GetTrailingBorder(axis);
         }
 
+        public float ResolveFlexGrow()
+        {
+            // Root nodes flexGrow should always be 0
+            if (_owner == null)
+                return 0.0f;
+
+            if (_style.FlexGrow != null)
+                return _style.FlexGrow.Value;
+
+            if (_style.Flex != null && _style.Flex.Value > 0.0f)
+                return _style.Flex.Value;
+
+            return DefaultFlexGrow;
+        }
+
+        public float ResolveFlexShrink()
+        {
+            if (_owner == null)
+                return 0.0f;
+
+            if (_style.FlexShrink != null)
+                return _style.FlexShrink.Value;
+
+            if (!_config.UseWebDefaults && _style.Flex != null && _style.Flex.Value < 0.0f)
+                return -_style.Flex.Value;
+
+            return _config.UseWebDefaults ? WebDefaultFlexShrink : DefaultFlexShrink;
+        }
+
+        public YogaValue ResolveFlexBasis()
+        {
+            var flexBasis = _style.FlexBasis;
+            if (flexBasis.Unit != YogaUnit.Auto && flexBasis.Unit != YogaUnit.Undefined)
+                return flexBasis;
+
+            if (_style.Flex != null && _style.Flex.Value > 0.0f)
+                return _config.UseWebDefaults ? YogaValue.Auto : YogaValue.Zero;
+
+            return YogaValue.Auto;
+        }
+
+        public void ResolveDimension()
+        {
+            for (var dim = (int)YogaDimension.Width; dim < 2; dim++)
+            {
+                if (_style.MaxDimensions[dim].Unit != YogaUnit.Undefined && _style.MaxDimensions[dim].Equals(_style.MinDimensions[dim]))
+                    _resolvedDimensions[dim] = _style.MaxDimensions[dim];
+                else
+                    _resolvedDimensions[dim] = _style.Dimensions[dim];
+            }
+        }
+
+        public YogaDirection ResolveDirection(YogaDirection ownerDirection)
+        {
+            if (_style.Direction == YogaDirection.Inherit)
+                return ownerDirection > YogaDirection.Inherit ? ownerDirection : YogaDirection.LeftToRight;
+
+            return _style.Direction;
+        }
+
+        public bool IsNodeFlexible()
+        {
+            return ((_style.PositionType == YogaPositionType.Relative) && (ResolveFlexGrow() != 0 || ResolveFlexShrink() != 0));
+        }
+
         public bool DidUseLegacyFlag()
         {
             var didUseLegacyFlag = _layout.DidUseLegacyFlag;
@@ -654,6 +498,54 @@ namespace Marius.Yoga
             return false;
         }
 
+        // setters
+        public void SetLayoutMargin(float? margin, YogaEdge index)
+        {
+            _layout.Margin[index] = margin;
+        }
+
+        public void SetLayoutBorder(float border, YogaEdge index)
+        {
+            _layout.Border[index] = border;
+        }
+
+        public void SetLayoutPadding(float padding, YogaEdge index)
+        {
+            _layout.Padding[index] = padding;
+        }
+
+        public void SetLayoutPosition(float? position, YogaEdge index)
+        {
+            _layout.Position[(int)index] = position;
+        }
+
+        public void SetLayoutMeasuredDimension(float? measuredDimension, YogaDimension index)
+        {
+            _layout.MeasuredDimensions[index] = measuredDimension;
+        }
+
+        public void SetLayoutDimension(float? dimension, YogaDimension index)
+        {
+            _layout.Dimensions[index] = dimension;
+        }
+
+        public void SetPosition(YogaDirection direction, float? mainSize, float? crossSize, float? ownerWidth)
+        {
+            /* Root nodes should be always layouted as LTR, so we don't return negative
+             * values. */
+            var directionRespectingRoot = _owner != null ? direction : YogaDirection.LeftToRight;
+            var mainAxis = _style.FlexDirection.ResolveFlexDirection(directionRespectingRoot);
+            var crossAxis = mainAxis.FlexDirectionCross(directionRespectingRoot);
+
+            var relativePositionMain = GetRelativePosition(mainAxis, mainSize);
+            var relativePositionCross = GetRelativePosition(crossAxis, crossSize);
+
+            SetLayoutPosition((GetLeadingMargin(mainAxis, ownerWidth) + relativePositionMain), Leading[mainAxis]);
+            SetLayoutPosition((GetTrailingMargin(mainAxis, ownerWidth) + relativePositionMain), Trailing[mainAxis]);
+            SetLayoutPosition((GetLeadingMargin(crossAxis, ownerWidth) + relativePositionCross), Leading[crossAxis]);
+            SetLayoutPosition((GetTrailingMargin(crossAxis, ownerWidth) + relativePositionCross), Trailing[crossAxis]);
+        }
+
         public void SetAndPropogateUseLegacyFlag(bool useLegacyFlag)
         {
             _config.UseLegacyStretchBehaviour = useLegacyFlag;
@@ -661,14 +553,94 @@ namespace Marius.Yoga
                 item.Config.UseLegacyStretchBehaviour = useLegacyFlag;
         }
 
-        public void SetLayoutDoesLegacyFlagAffectsLayout(bool doesLegacyFlagAffectsLayout)
+        // Other methods
+
+        public int IndexOf(YogaNode node)
         {
-            _layout.DoesLegacyStretchFlagAffectsLayout = doesLegacyFlagAffectsLayout;
+            return _children.IndexOf(node);
         }
 
-        public void SetLayoutDidUseLegacyFlag(bool didUseLegacyFlag)
+        public void Clear()
         {
-            _layout.DidUseLegacyFlag = didUseLegacyFlag;
+            foreach (var item in _children)
+                item._owner = null;
+
+            _children.Clear();
+            _isDirty = true;
+        }
+
+        public void ReplaceChild(YogaNode oldChild, YogaNode newChild)
+        {
+            var index = _children.IndexOf(oldChild);
+            if (index < 0)
+                return;
+
+            newChild.Owner = this;
+            _children[index] = newChild;
+
+            MarkDirty();
+        }
+
+        public void ReplaceChild(YogaNode child, int index)
+        {
+            child.Owner = this;
+            _children[index] = child;
+
+            MarkDirty();
+        }
+
+        public void Insert(int index, YogaNode child)
+        {
+            if (child.Owner != null)
+                throw new InvalidOperationException("Child already has a owner, it must be removed first.");
+
+            if (_measure != null)
+                throw new InvalidOperationException("Cannot add child: Nodes with measure functions cannot have children.");
+
+            child.Owner = this;
+            _children.Insert(index, child);
+
+            MarkDirty();
+        }
+
+        public bool Remove(YogaNode child)
+        {
+            if (child.Owner == this)
+                child.Owner = null;
+
+            var result = _children.Remove(child);
+            if (result)
+                MarkDirty();
+
+            return result;
+        }
+
+        public void RemoveAt(int index)
+        {
+            var child = _children[index];
+            child.Owner = null;
+            _children.RemoveAt(index);
+
+            MarkDirty();
+        }
+
+        public void MarkDirty()
+        {
+            if (!_isDirty)
+            {
+                IsDirty = true;
+
+                Layout.ComputedFlexBasis = default(float?);
+                if (_owner != null)
+                    _owner.MarkDirty();
+            }
+        }
+
+        public void MarkDirtyAndPropogateDownwards()
+        {
+            _isDirty = true;
+            foreach (var item in _children)
+                item.MarkDirtyAndPropogateDownwards();
         }
 
         public bool IsLayoutTreeEqualToNode(YogaNode node)
@@ -695,6 +667,12 @@ namespace Marius.Yoga
             return isLayoutTreeEqual;
         }
 
+        private void SetChildTrailingPosition(YogaNode child, YogaFlexDirection axis)
+        {
+            var size = child.Layout.MeasuredDimensions[Dimension[axis]];
+            child.SetLayoutPosition(Layout.MeasuredDimensions[Dimension[axis]] - size - child.Layout.Position[Position[axis]], Trailing[axis]);
+        }
+
         private void CloneChildrenIfNeeded()
         {
             var childCount = _children.Count;
@@ -705,7 +683,7 @@ namespace Marius.Yoga
             if (firstChild.Owner == this)
             {
                 // If the first child has this node as its owner, we assume that it is
-                // already unique. We can do this because if we have it has a child, that
+                // already unique. We can do this because if we have it as a child, that
                 // means that its owner was at some point cloned which made that subtree
                 // immutable. We also assume that all its sibling are cloned as well.
                 return;

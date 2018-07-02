@@ -19,13 +19,6 @@ namespace Marius.Yoga
     {
         private object _data;
 
-        public void MarkHasNewLayout()
-        {
-            _hasNewLayout = true;
-        }
-
-        public YogaNode Parent { get { return _owner; } }
-
         public bool IsMeasureDefined { get { return _measure != null; } }
 
         public bool IsBaselineDefined { get { return _baseline != null; } }
@@ -388,43 +381,27 @@ namespace Marius.Yoga
 
         public float LayoutX
         {
-            get
-            {
-
-                return _layout.Position[YogaEdge.Left] ?? 0;
-            }
+            get { return _layout.Position[YogaEdge.Left] ?? 0; }
         }
 
         public float LayoutY
         {
-            get
-            {
-                return _layout.Position[YogaEdge.Top] ?? 0;
-            }
+            get { return _layout.Position[YogaEdge.Top] ?? 0; }
         }
 
         public float LayoutWidth
         {
-            get
-            {
-                return _layout.Dimensions[YogaDimension.Width] ?? 0;
-            }
+            get { return _layout.Dimensions[YogaDimension.Width] ?? 0; }
         }
 
         public float LayoutHeight
         {
-            get
-            {
-                return _layout.Dimensions[YogaDimension.Height] ?? 0;
-            }
+            get { return _layout.Dimensions[YogaDimension.Height] ?? 0; }
         }
 
         public YogaDirection LayoutDirection
         {
-            get
-            {
-                return _layout.Direction;
-            }
+            get { return _layout.Direction; }
         }
 
         public YogaOverflow Overflow
@@ -446,31 +423,18 @@ namespace Marius.Yoga
 
         public object Data
         {
-            get
-            {
-                return _data;
-            }
-
-            set
-            {
-                _data = value;
-            }
+            get { return _data; }
+            set { _data = value; }
         }
 
         public YogaNode this[int index]
         {
-            get
-            {
-                return _children[index];
-            }
+            get { return _children[index]; }
         }
 
         public int Count
         {
-            get
-            {
-                return _children != null ? _children.Count : 0;
-            }
+            get { return _children != null ? _children.Count : 0; }
         }
 
         public void MarkLayoutSeen()
@@ -515,8 +479,8 @@ namespace Marius.Yoga
 
             if (_config.UseWebDefaults)
             {
-                SetStyleFlexDirection(YogaFlexDirection.Row);
-                SetStyleAlignContent(YogaAlign.Stretch);
+                Style.FlexDirection = YogaFlexDirection.Row;
+                Style.AlignContent = YogaAlign.Stretch;
             }
         }
 
