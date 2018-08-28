@@ -50,6 +50,7 @@
     <Compile Include="MeasureOutput.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="YGAbsolutePositionTest.cs" />
+    <Compile Include="YGAlignBaselineTest.cs" />
     <Compile Include="YGAlignContentTest.cs" />
     <Compile Include="YGAlignItemsTest.cs" />
     <Compile Include="YGAlignSelfTest.cs" />

@@ -800,15 +800,16 @@ namespace Marius.Yoga
             }
 
             // STEP 8: MULTI-LINE CONTENT ALIGNMENT
-            if (performLayout && (lineCount > 1 || IsBaselineLayout()) && availableInnerCrossDim != null)
+            if (performLayout && (lineCount > 1 || IsBaselineLayout()))
             {
-                var remainingAlignContentDim = availableInnerCrossDim.Value - totalLineCrossDim;
-
                 var crossDimLead = (float?)0F;
                 var currentLead = (float?)leadingPaddingAndBorderCross;
 
-                switch (Style.AlignContent)
+                if (availableInnerCrossDim != null)
                 {
+                    var remainingAlignContentDim = availableInnerCrossDim - totalLineCrossDim;
+                    switch (Style.AlignContent)
+                    {
                     case YogaAlign.FlexEnd:
                         currentLead += remainingAlignContentDim;
                         break;
@@ -845,6 +846,7 @@ namespace Marius.Yoga
                     case YogaAlign.FlexStart:
                     case YogaAlign.Baseline:
                         break;
+                    }
                 }
 
                 var endIndex = 0;
@@ -1247,8 +1249,8 @@ namespace Marius.Yoga
         }
 
         private float? CalculateAvailableInnerDim(
-            YogaFlexDirection axis, 
-            float? availableDim, 
+            YogaFlexDirection axis,
+            float? availableDim,
             float? ownerDim)
         {
             var direction = axis.IsRow() ? YogaFlexDirection.Row : YogaFlexDirection.Column;
@@ -1366,8 +1368,8 @@ namespace Marius.Yoga
         }
 
         private float? BoundAxisWithinMinAndMax(
-            YogaFlexDirection axis, 
-            float? value, 
+            YogaFlexDirection axis,
+            float? value,
             float? axisSize)
         {
             var min = default(float?);
@@ -1398,19 +1400,19 @@ namespace Marius.Yoga
         // below the
         // padding and border amount.
         private float? BoundAxis(
-            YogaFlexDirection axis, 
-            float? value, 
-            float? axisSize, 
+            YogaFlexDirection axis,
+            float? value,
+            float? axisSize,
             float? widthSize)
         {
             return YogaMath.Max(BoundAxisWithinMinAndMax(axis, value, axisSize), GetPaddingAndBorderForAxis(axis, widthSize));
         }
 
         private void ConstrainMaxSizeForMode(
-            YogaFlexDirection axis, 
-            float? ownerAxisSize, 
-            float? ownerWidth, 
-            ref YogaMeasureMode mode, 
+            YogaFlexDirection axis,
+            float? ownerAxisSize,
+            float? ownerWidth,
+            ref YogaMeasureMode mode,
             ref float? size)
         {
             var maxSize = Style.MaxDimensions[Dimension[axis]].Resolve(ownerAxisSize) + GetMarginForAxis(axis, ownerWidth);
@@ -2030,6 +2032,8 @@ namespace Marius.Yoga
             ref bool performLayout)
         {
             var style = Style;
+            var leadingPaddingAndBorderMain = GetLeadingPaddingAndBorder(mainAxis, ownerWidth);
+            var trailingPaddingAndBorderMain = GetTrailingPaddingAndBorder(mainAxis, ownerWidth);
 
             // If we are using "at most" rules in the main axis. Calculate the remaining
             // space when constraint by the min size defined for the main axis.
@@ -2038,9 +2042,17 @@ namespace Marius.Yoga
             {
                 if (style.MinDimensions[Dimension[mainAxis]].Unit != YogaUnit.Undefined && style.MinDimensions[Dimension[mainAxis]].Resolve(mainAxisOwnerSize) != null)
                 {
-                    collectedFlexItemsValues.RemainingFreeSpace = YogaMath.Max(
-                        0,
-                        (style.MinDimensions[Dimension[mainAxis]].Resolve(mainAxisOwnerSize)) - (availableInnerMainDim - collectedFlexItemsValues.RemainingFreeSpace));
+                    // This condition makes sure that if the size of main dimension(after
+                    // considering child nodes main dim, leading and trailing padding etc)
+                    // falls below min dimension, then the remainingFreeSpace is reassigned
+                    // considering the min dimension
+
+                    // `minAvailableMainDim` denotes minimum available space in which child
+                    // can be laid out, it will exclude space consumed by padding and border.
+
+                    var minAvailableMainDim = style.MinDimensions[Dimension[mainAxis]].Resolve(mainAxisOwnerSize) - leadingPaddingAndBorderMain - trailingPaddingAndBorderMain; ;
+                    var occupiedSpaceByChildNodes = availableInnerMainDim - collectedFlexItemsValues.RemainingFreeSpace;
+                    collectedFlexItemsValues.RemainingFreeSpace = YogaMath.Max(0, minAvailableMainDim - occupiedSpaceByChildNodes);
                 }
                 else
                 {
@@ -2104,10 +2116,12 @@ namespace Marius.Yoga
                 }
             }
 
-            var leadingPaddingAndBorderMain = GetLeadingPaddingAndBorder(mainAxis, ownerWidth);
             collectedFlexItemsValues.MainDimension = leadingPaddingAndBorderMain + leadingMainDim;
             collectedFlexItemsValues.CrossDimension = 0;
 
+            var maxAscentForCurrentLine = 0F;
+            var maxDescentForCurrentLine = 0F;
+            var isNodeBaselineLayout = IsBaselineLayout();
             for (var i = startOfLineIndex; i < collectedFlexItemsValues.EndOfLineIndex; i++)
             {
                 var child = GetChild(i);
@@ -2164,9 +2178,22 @@ namespace Marius.Yoga
                             // the spacing.
                             collectedFlexItemsValues.MainDimension += betweenMainDim + child.GetDimensionWithMargin(mainAxis, availableInnerWidth);
 
-                            // The cross dimension is the max of the elements dimension since
-                            // there can only be one element in that cross dimension.
-                            collectedFlexItemsValues.CrossDimension = YogaMath.Max(collectedFlexItemsValues.CrossDimension, child.GetDimensionWithMargin(crossAxis, availableInnerWidth));
+                            if (isNodeBaselineLayout)
+                            {
+                                // If the child is baseline aligned then the cross dimension is
+                                // calculated by adding maxAscent and maxDescent from the baseline.
+
+                                var ascent = CalculateBaseline(child) + child.GetLeadingMargin(YogaFlexDirection.Column, availableInnerWidth);
+                                var descent = child.Layout.MeasuredDimensions[YogaDimension.Height] + child.GetMarginForAxis(YogaFlexDirection.Column, availableInnerWidth) - ascent;
+
+                                maxAscentForCurrentLine = YogaMath.Max(maxAscentForCurrentLine, ascent);
+                                maxDescentForCurrentLine = YogaMath.Max(maxDescentForCurrentLine, descent);
+                            }
+                            else
+                            {
+                                collectedFlexItemsValues.CrossDimension = YogaMath.Max(collectedFlexItemsValues.CrossDimension, child.GetDimensionWithMargin(crossAxis, availableInnerWidth));
+
+                            }
                         }
                     }
                     else if (performLayout)
@@ -2176,7 +2203,10 @@ namespace Marius.Yoga
                 }
             }
 
-            collectedFlexItemsValues.MainDimension += GetTrailingPaddingAndBorder(mainAxis, ownerWidth);
+            collectedFlexItemsValues.MainDimension += trailingPaddingAndBorderMain;
+
+            if (isNodeBaselineLayout)
+                collectedFlexItemsValues.CrossDimension = maxAscentForCurrentLine + maxDescentForCurrentLine;
         }
 
         private void AbsoluteLayoutChild(
