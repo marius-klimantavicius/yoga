@@ -16,6 +16,68 @@ namespace Marius.Yoga
     public class YGRoundingTest
     {
         [Test]
+        public void Test_rounding()
+        {
+            // Test that whole numbers are rounded to whole despite ceil/floor flags
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(6.000001f, 2.0f, false, false));
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(6.000001f, 2.0f, true, false));
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(6.000001f, 2.0f, false, true));
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(5.999999f, 2.0f, false, false));
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(5.999999f, 2.0f, true, false));
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(5.999999f, 2.0f, false, true));
+            // Same tests for negative numbers
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-6.000001f, 2.0f, false, false));
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-6.000001f, 2.0f, true, false));
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-6.000001f, 2.0f, false, true));
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-5.999999f, 2.0f, false, false));
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-5.999999f, 2.0f, true, false));
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-5.999999f, 2.0f, false, true));
+
+            // Test that numbers with fraction are rounded correctly accounting for ceil/floor flags
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(6.01f, 2.0f, false, false));
+            Assert.AreEqual(6.5f, YogaMath.RoundValueToPixelGrid(6.01f, 2.0f, true, false));
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(6.01f, 2.0f, false, true));
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(5.99f, 2.0f, false, false));
+            Assert.AreEqual(6.0f, YogaMath.RoundValueToPixelGrid(5.99f, 2.0f, true, false));
+            Assert.AreEqual(5.5f, YogaMath.RoundValueToPixelGrid(5.99f, 2.0f, false, true));
+            // Same tests for negative numbers
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-6.01f, 2.0f, false, false));
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-6.01f, 2.0f, true, false));
+            Assert.AreEqual(-6.5f, YogaMath.RoundValueToPixelGrid(-6.01f, 2.0f, false, true));
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-5.99f, 2.0f, false, false));
+            Assert.AreEqual(-5.5f, YogaMath.RoundValueToPixelGrid(-5.99f, 2.0f, true, false));
+            Assert.AreEqual(-6.0f, YogaMath.RoundValueToPixelGrid(-5.99f, 2.0f, false, true));
+        }
+
+        [Test]
+        public void Test_consistent_rounding_during_repeated_layouts()
+        {
+            YogaConfig config = new YogaConfig();
+            config.PointScaleFactor = 2;
+
+            var root = new YogaNode(config);
+            root.Style.Margin[YogaEdge.Top] = -1.49f;
+            root.Width = 500;
+            root.Height = 500;
+
+            var node0 = new YogaNode(config);
+            root.Insert(0, node0);
+
+            var node1 = new YogaNode(config);
+            node1.SetMeasureFunction((node, width, widthMode, height, heightMode) => new YogaSize() { Width = 10, Height = 10 });
+            node0.Insert(0, node1);
+
+            for (var i = 0; i < 5; i++)
+            {
+                // Dirty the tree so YGRoundToPixelGrid runs again
+                root.Style.Margin[YogaEdge.Left] = i + 1;
+
+                root.CalculateLayout(null, null, YogaDirection.LeftToRight);
+                Assert.AreEqual(10, node1.LayoutHeight);
+            }
+        }
+
+        [Test]
         public void Test_rounding_flex_basis_flex_grow_row_width_of_100()
         {
             YogaConfig config = new YogaConfig();

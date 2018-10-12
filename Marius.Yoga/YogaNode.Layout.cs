@@ -229,8 +229,8 @@ namespace Marius.Yoga
             }
             else if (performLayout)
             {
-                if (FloatsEqual(layout.CachedLayout.AvailableWidth, availableWidth) &&
-                    FloatsEqual(layout.CachedLayout.AvailableHeight, availableHeight) &&
+                if (YogaMath.FloatsEqual(layout.CachedLayout.AvailableWidth, availableWidth) &&
+                    YogaMath.FloatsEqual(layout.CachedLayout.AvailableHeight, availableHeight) &&
                     layout.CachedLayout.WidthMeasureMode == widthMeasureMode &&
                     layout.CachedLayout.HeightMeasureMode == heightMeasureMode)
                 {
@@ -241,8 +241,8 @@ namespace Marius.Yoga
             {
                 for (var i = 0; i < layout.NextCachedMeasurementsIndex; i++)
                 {
-                    if (FloatsEqual(layout.CachedMeasurements[i].AvailableWidth, availableWidth) &&
-                        FloatsEqual(layout.CachedMeasurements[i].AvailableHeight, availableHeight) &&
+                    if (YogaMath.FloatsEqual(layout.CachedMeasurements[i].AvailableWidth, availableWidth) &&
+                        YogaMath.FloatsEqual(layout.CachedMeasurements[i].AvailableHeight, availableHeight) &&
                         layout.CachedMeasurements[i].WidthMeasureMode == widthMeasureMode &&
                         layout.CachedMeasurements[i].HeightMeasureMode == heightMeasureMode)
                     {
@@ -933,8 +933,8 @@ namespace Marius.Yoga
                                                    ? (child.Layout.MeasuredDimensions[YogaDimension.Height] + child.GetMarginForAxis(crossAxis, availableInnerWidth))
                                                    : lineHeight;
 
-                                                if (!(FloatsEqual(childWidth, child.Layout.MeasuredDimensions[YogaDimension.Width])
-                                                    && FloatsEqual(childHeight, child.Layout.MeasuredDimensions[YogaDimension.Height])))
+                                                if (!(YogaMath.FloatsEqual(childWidth, child.Layout.MeasuredDimensions[YogaDimension.Width])
+                                                    && YogaMath.FloatsEqual(childHeight, child.Layout.MeasuredDimensions[YogaDimension.Height])))
                                                 {
                                                     child.LayoutNode(
                                                         childWidth,
@@ -2446,29 +2446,29 @@ namespace Marius.Yoga
             // lead to unwanted text truncation.
             var textRounding = NodeType == YogaNodeType.Text;
 
-            SetLayoutPosition(RoundValueToPixelGrid(nodeLeft, pointScaleFactor, false, textRounding), YogaEdge.Left);
-            SetLayoutPosition(RoundValueToPixelGrid(nodeTop, pointScaleFactor, false, textRounding), YogaEdge.Top);
+            SetLayoutPosition(YogaMath.RoundValueToPixelGrid(nodeLeft, pointScaleFactor, false, textRounding), YogaEdge.Left);
+            SetLayoutPosition(YogaMath.RoundValueToPixelGrid(nodeTop, pointScaleFactor, false, textRounding), YogaEdge.Top);
 
             // We multiply dimension by scale factor and if the result is close to the whole number, we don't
             // have any fraction
             // To verify if the result is close to whole number we want to check both floor and ceil numbers
-            var hasFractionalWidth = !FloatsEqual(((nodeWidth * pointScaleFactor) % 1.0F), 0) && !FloatsEqual(((nodeWidth * pointScaleFactor) % 1.0F), 1.0F);
-            var hasFractionalHeight = !FloatsEqual(((nodeHeight * pointScaleFactor) % 1.0F), 0) && !FloatsEqual(((nodeHeight * pointScaleFactor) % 1.0F), 1.0F);
+            var hasFractionalWidth =  !YogaMath.FloatsEqual(((nodeWidth * pointScaleFactor) % 1.0F), 0) &&  !YogaMath.FloatsEqual(((nodeWidth * pointScaleFactor) % 1.0F), 1.0F);
+            var hasFractionalHeight = !YogaMath.FloatsEqual(((nodeHeight * pointScaleFactor) % 1.0F), 0) && !YogaMath.FloatsEqual(((nodeHeight * pointScaleFactor) % 1.0F), 1.0F);
 
             SetLayoutDimension(
-                RoundValueToPixelGrid(
+                YogaMath.RoundValueToPixelGrid(
                     absoluteNodeRight,
                     pointScaleFactor,
                     (textRounding && hasFractionalWidth),
-                    (textRounding && !hasFractionalWidth)) - RoundValueToPixelGrid(absoluteNodeLeft, pointScaleFactor, false, textRounding),
+                    (textRounding && !hasFractionalWidth)) - YogaMath.RoundValueToPixelGrid(absoluteNodeLeft, pointScaleFactor, false, textRounding),
                 YogaDimension.Width);
 
             SetLayoutDimension(
-                RoundValueToPixelGrid(
+                YogaMath.RoundValueToPixelGrid(
                     absoluteNodeBottom,
                     pointScaleFactor,
                     (textRounding && hasFractionalHeight),
-                    (textRounding && !hasFractionalHeight)) - RoundValueToPixelGrid(absoluteNodeTop, pointScaleFactor, false, textRounding),
+                    (textRounding && !hasFractionalHeight)) - YogaMath.RoundValueToPixelGrid(absoluteNodeTop, pointScaleFactor, false, textRounding),
                 YogaDimension.Height);
 
             var childCount = Count;
@@ -2505,14 +2505,14 @@ namespace Marius.Yoga
 
         private static bool MeasureModeSizeIsExactAndMatchesOldMeasuredSize(YogaMeasureMode sizeMode, float? size, float? lastComputedSize)
         {
-            return sizeMode == YogaMeasureMode.Exactly && FloatsEqual(size, lastComputedSize);
+            return sizeMode == YogaMeasureMode.Exactly && YogaMath.FloatsEqual(size, lastComputedSize);
         }
 
         private static bool MeasureModeOldSizeIsUnspecifiedAndStillFits(YogaMeasureMode sizeMode, float? size, YogaMeasureMode lastSizeMode, float? lastComputedSize)
         {
             return sizeMode == YogaMeasureMode.AtMost
                 && lastSizeMode == YogaMeasureMode.Undefined
-                && ((size > lastComputedSize || size == lastComputedSize) || FloatsEqual(size, lastComputedSize));
+                && ((size > lastComputedSize || size == lastComputedSize) || YogaMath.FloatsEqual(size, lastComputedSize));
         }
 
         private static bool MeasureModeNewMeasureSizeIsStricterAndStillValid(YogaMeasureMode sizeMode, float? size, YogaMeasureMode lastSizeMode, float? lastSize, float? lastComputedSize)
@@ -2523,7 +2523,7 @@ namespace Marius.Yoga
                 && lastSize != null
                 && lastComputedSize != null
                 && lastSize > size
-                && (lastComputedSize < size || lastComputedSize == size || FloatsEqual(size, lastComputedSize));
+                && (lastComputedSize < size || lastComputedSize == size || YogaMath.FloatsEqual(size, lastComputedSize));
         }
 
         private static bool CanUseCachedMeasurement(
@@ -2545,13 +2545,13 @@ namespace Marius.Yoga
                 return false;
 
             var useRoundedComparison = config != null && config.PointScaleFactor != 0;
-            var effectiveWidth = useRoundedComparison ? RoundValueToPixelGrid(width, config.PointScaleFactor, false, false) : width;
-            var effectiveHeight = useRoundedComparison ? RoundValueToPixelGrid(height, config.PointScaleFactor, false, false) : height;
-            var effectiveLastWidth = useRoundedComparison ? RoundValueToPixelGrid(lastWidth, config.PointScaleFactor, false, false) : lastWidth;
-            var effectiveLastHeight = useRoundedComparison ? RoundValueToPixelGrid(lastHeight, config.PointScaleFactor, false, false) : lastHeight;
+            var effectiveWidth = useRoundedComparison ? YogaMath.RoundValueToPixelGrid(width, config.PointScaleFactor, false, false) : width;
+            var effectiveHeight = useRoundedComparison ? YogaMath.RoundValueToPixelGrid(height, config.PointScaleFactor, false, false) : height;
+            var effectiveLastWidth = useRoundedComparison ? YogaMath.RoundValueToPixelGrid(lastWidth, config.PointScaleFactor, false, false) : lastWidth;
+            var effectiveLastHeight = useRoundedComparison ? YogaMath.RoundValueToPixelGrid(lastHeight, config.PointScaleFactor, false, false) : lastHeight;
 
-            var hasSameWidthSpec = lastWidthMode == widthMode && FloatsEqual(effectiveLastWidth, effectiveWidth);
-            var hasSameHeightSpec = lastHeightMode == heightMode && FloatsEqual(effectiveLastHeight, effectiveHeight);
+            var hasSameWidthSpec = lastWidthMode == widthMode && YogaMath.FloatsEqual(effectiveLastWidth, effectiveWidth);
+            var hasSameHeightSpec = lastHeightMode == heightMode && YogaMath.FloatsEqual(effectiveLastHeight, effectiveHeight);
 
             var widthIsCompatible = hasSameWidthSpec
                 || MeasureModeSizeIsExactAndMatchesOldMeasuredSize(widthMode, width - marginRow, lastComputedWidth)
@@ -2564,47 +2564,6 @@ namespace Marius.Yoga
                 || MeasureModeNewMeasureSizeIsStricterAndStillValid(heightMode, height - marginColumn, lastHeightMode, lastHeight, lastComputedHeight);
 
             return widthIsCompatible && heightIsCompatible;
-        }
-
-        private static float? RoundValueToPixelGrid(float? value, float? pointScaleFactor, bool forceCeil, bool forceFloor)
-        {
-            var scaledValue = value * pointScaleFactor;
-            var fractial = scaledValue % 1.0f;
-            if (FloatsEqual(fractial, 0))
-            {
-                // First we check if the value is already rounded
-                scaledValue = scaledValue - fractial;
-            }
-            else if (FloatsEqual(fractial, 1.0f))
-            {
-                scaledValue = scaledValue - fractial + 1.0f;
-            }
-            else if (forceCeil)
-            {
-                // Next we check if we need to use forced rounding
-                scaledValue = scaledValue - fractial + 1.0f;
-            }
-            else if (forceFloor)
-            {
-                scaledValue = scaledValue - fractial;
-            }
-            else
-            {
-                // Finally we just round the value
-                scaledValue = scaledValue - fractial + ((fractial != null) && (fractial > 0.5f || FloatsEqual(fractial, 0.5f)) ? 1.0f : 0.0f);
-            }
-            return ((scaledValue == null) || pointScaleFactor == null) ? default(float?) : scaledValue / pointScaleFactor;
-        }
-
-        private static bool FloatsEqual(float? a, float? b)
-        {
-            if (a == null)
-                return b == null;
-
-            if (b == null)
-                return false;
-
-            return Math.Abs(a.Value - b.Value) < 0.0001f;
         }
     }
 }
