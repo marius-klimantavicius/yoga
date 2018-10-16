@@ -1721,5 +1721,84 @@ namespace Marius.Yoga
             Assert.AreEqual(50f, root_child1.LayoutHeight);
         }
 
+        [Test]
+        public void Test_margin_side_overrides_horizontal_and_vertical()
+        {
+            var edges = new[] { YogaEdge.Top,
+                                YogaEdge.Bottom,
+                                YogaEdge.Start,
+                                YogaEdge.End,
+                                YogaEdge.Left,
+                                YogaEdge.Right};
+            for (float edgeValue = 0; edgeValue < 2; ++edgeValue)
+            {
+                foreach (var edge in edges)
+                {
+                    var horizontalOrVertical = edge == YogaEdge.Top || edge == YogaEdge.Bottom
+                        ? YogaEdge.Vertical
+                        : YogaEdge.Horizontal;
+                    var root = new YogaNode();
+                    root.Width = 100;
+                    root.Height = 100;
+                    root.Style.Margin[horizontalOrVertical] = 10;
+                    root.Style.Margin[edge] = edgeValue;
+                    root.CalculateLayout(100, 100, YogaDirection.LeftToRight);
+
+                    Assert.AreEqual(edgeValue, root.GetLayoutMargin(edge));
+                }
+            }
+        }
+        [Test]
+        public void Test_margin_side_overrides_all()
+        {
+            var edges = new[] { YogaEdge.Top,
+                                YogaEdge.Bottom,
+                                YogaEdge.Start,
+                                YogaEdge.End,
+                                YogaEdge.Left,
+                                YogaEdge.Right};
+            for (float edgeValue = 0; edgeValue < 2; ++edgeValue)
+            {
+                foreach (var edge in edges)
+                {
+                    var root = new YogaNode();
+                    root.Width = 100;
+                    root.Height = 100;
+                    root.Style.Margin[YogaEdge.All] = 10;
+                    root.Style.Margin[edge] = edgeValue;
+                    root.CalculateLayout(100, 100, YogaDirection.LeftToRight);
+                    Assert.AreEqual(edgeValue, root.GetLayoutMargin(edge));
+                }
+            }
+        }
+        [Test]
+        public void Test_margin_horizontal_and_vertical_overrides_all()
+        {
+            var directions = new[] { YogaEdge.Horizontal, YogaEdge.Vertical };
+            for (float directionValue = 0; directionValue < 2; ++directionValue)
+            {
+                foreach (var direction in directions)
+                {
+                    var root = new YogaNode();
+                    root.Width = 100;
+                    root.Height = 100;
+                    root.Style.Margin[YogaEdge.All] = 10;
+                    root.Style.Margin[direction] = directionValue;
+                    root.CalculateLayout(100, 100, YogaDirection.LeftToRight);
+                    if (direction == YogaEdge.Vertical)
+                    {
+                        Assert.AreEqual(directionValue, root.LayoutMarginTop);
+                        Assert.AreEqual(directionValue, root.LayoutMarginBottom);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(directionValue, root.LayoutMarginStart);
+                        Assert.AreEqual(directionValue, root.LayoutMarginEnd);
+                        Assert.AreEqual(directionValue, root.LayoutMarginLeft);
+                        Assert.AreEqual(directionValue, root.LayoutMarginRight);
+                    }
+                }
+            }
+        }
     }
 }

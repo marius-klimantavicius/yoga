@@ -453,7 +453,7 @@ namespace Marius.Yoga
             }
         }
 
-        private float? GetLayoutMargin(YogaEdge edge)
+        public float? GetLayoutMargin(YogaEdge edge)
         {
             if (edge == YogaEdge.Left)
             {
@@ -472,7 +472,7 @@ namespace Marius.Yoga
             return _layout.Margin[edge];
         }
 
-        private float GetLayoutPadding(YogaEdge edge)
+        public float GetLayoutPadding(YogaEdge edge)
         {
             if (edge == YogaEdge.Left)
             {
