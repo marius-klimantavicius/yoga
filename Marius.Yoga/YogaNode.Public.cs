@@ -23,6 +23,19 @@ namespace Marius.Yoga
 
         public bool IsBaselineDefined { get { return _baseline != null; } }
 
+        public bool IsReferenceBaseline
+        {
+            get { return _isReferenceBaseline; }
+            set
+            {
+                if (_isReferenceBaseline != value)
+                {
+                    _isReferenceBaseline = value;
+                    MarkDirty();
+                }
+            }
+        }
+
         public void CopyStyle(YogaNode srcNode)
         {
             _style.CopyFrom(srcNode.Style);

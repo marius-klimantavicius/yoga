@@ -28,6 +28,7 @@ namespace Marius.Yoga
         private YogaNodeType _nodeType;
         private YogaMeasure _measure;
         private YogaBaseline _baseline;
+        private bool _isReferenceBaseline;
         private YogaDirtied _dirtied;
         private YogaStyle _style;
         private YogaLayout _layout;

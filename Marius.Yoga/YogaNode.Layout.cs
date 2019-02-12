@@ -810,42 +810,42 @@ namespace Marius.Yoga
                     var remainingAlignContentDim = availableInnerCrossDim - totalLineCrossDim;
                     switch (Style.AlignContent)
                     {
-                    case YogaAlign.FlexEnd:
-                        currentLead += remainingAlignContentDim;
-                        break;
-                    case YogaAlign.Center:
-                        currentLead += remainingAlignContentDim / 2;
-                        break;
-                    case YogaAlign.Stretch:
-                        if (availableInnerCrossDim > totalLineCrossDim)
-                        {
-                            crossDimLead = remainingAlignContentDim / lineCount;
-                        }
-                        break;
-                    case YogaAlign.SpaceAround:
-                        if (availableInnerCrossDim > totalLineCrossDim)
-                        {
-                            currentLead += remainingAlignContentDim / (2 * lineCount);
-                            if (lineCount > 1)
+                        case YogaAlign.FlexEnd:
+                            currentLead += remainingAlignContentDim;
+                            break;
+                        case YogaAlign.Center:
+                            currentLead += remainingAlignContentDim / 2;
+                            break;
+                        case YogaAlign.Stretch:
+                            if (availableInnerCrossDim > totalLineCrossDim)
                             {
                                 crossDimLead = remainingAlignContentDim / lineCount;
                             }
-                        }
-                        else
-                        {
-                            currentLead += remainingAlignContentDim / 2;
-                        }
-                        break;
-                    case YogaAlign.SpaceBetween:
-                        if (availableInnerCrossDim > totalLineCrossDim && lineCount > 1)
-                        {
-                            crossDimLead = remainingAlignContentDim / (lineCount - 1);
-                        }
-                        break;
-                    case YogaAlign.Auto:
-                    case YogaAlign.FlexStart:
-                    case YogaAlign.Baseline:
-                        break;
+                            break;
+                        case YogaAlign.SpaceAround:
+                            if (availableInnerCrossDim > totalLineCrossDim)
+                            {
+                                currentLead += remainingAlignContentDim / (2 * lineCount);
+                                if (lineCount > 1)
+                                {
+                                    crossDimLead = remainingAlignContentDim / lineCount;
+                                }
+                            }
+                            else
+                            {
+                                currentLead += remainingAlignContentDim / 2;
+                            }
+                            break;
+                        case YogaAlign.SpaceBetween:
+                            if (availableInnerCrossDim > totalLineCrossDim && lineCount > 1)
+                            {
+                                crossDimLead = remainingAlignContentDim / (lineCount - 1);
+                            }
+                            break;
+                        case YogaAlign.Auto:
+                        case YogaAlign.FlexStart:
+                        case YogaAlign.Baseline:
+                            break;
                     }
                 }
 
@@ -1296,22 +1296,26 @@ namespace Marius.Yoga
             // If there is only one child with flexGrow + flexShrink it means we can set
             // the computedFlexBasis to 0 instead of measuring and shrinking / flexing the
             // child to exactly match the remaining space
+
             if (measureModeMainDim == YogaMeasureMode.Exactly)
             {
                 foreach (var child in children)
                 {
-                    if (singleFlexChild != null)
+                    if (child.IsNodeFlexible())
                     {
-                        if (child.IsNodeFlexible())
+                        if (singleFlexChild != null ||
+                            YogaMath.FloatsEqual(child.ResolveFlexGrow(), 0.0f) ||
+                            YogaMath.FloatsEqual(child.ResolveFlexShrink(), 0.0f))
                         {
-                            // There is already a flexible child, abort
+                            // There is already a flexible child, or this flexible child doesn't
+                            // have flexGrow and flexShrink, abort
                             singleFlexChild = null;
                             break;
                         }
-                    }
-                    else if (child.ResolveFlexGrow() > 0.0f && child.ResolveFlexShrink() > 0.0f)
-                    {
-                        singleFlexChild = child;
+                        else
+                        {
+                            singleFlexChild = child;
+                        }
                     }
                 }
             }
@@ -1616,7 +1620,7 @@ namespace Marius.Yoga
                 if (child.Style.PositionType == YogaPositionType.Absolute)
                     continue;
 
-                if (node.GetAlign(child) == YogaAlign.Baseline)
+                if (node.GetAlign(child) == YogaAlign.Baseline || child.IsReferenceBaseline)
                 {
                     baselineChild = child;
                     break;
@@ -2452,7 +2456,7 @@ namespace Marius.Yoga
             // We multiply dimension by scale factor and if the result is close to the whole number, we don't
             // have any fraction
             // To verify if the result is close to whole number we want to check both floor and ceil numbers
-            var hasFractionalWidth =  !YogaMath.FloatsEqual(((nodeWidth * pointScaleFactor) % 1.0F), 0) &&  !YogaMath.FloatsEqual(((nodeWidth * pointScaleFactor) % 1.0F), 1.0F);
+            var hasFractionalWidth = !YogaMath.FloatsEqual(((nodeWidth * pointScaleFactor) % 1.0F), 0) && !YogaMath.FloatsEqual(((nodeWidth * pointScaleFactor) % 1.0F), 1.0F);
             var hasFractionalHeight = !YogaMath.FloatsEqual(((nodeHeight * pointScaleFactor) % 1.0F), 0) && !YogaMath.FloatsEqual(((nodeHeight * pointScaleFactor) % 1.0F), 1.0F);
 
             SetLayoutDimension(
