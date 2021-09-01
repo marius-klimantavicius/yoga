@@ -64,7 +64,7 @@ namespace Marius.Yoga
         }
     }
 
-    public class YogaArray<T>
+    public struct YogaArray<T>
     {
         private readonly T[] _array;
 
