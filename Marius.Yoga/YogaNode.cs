@@ -590,6 +590,20 @@ namespace Marius.Yoga
             MarkDirty();
         }
 
+        public void Add(YogaNode child)
+        {
+            if (child.Owner != null)
+                throw new InvalidOperationException("Child already has a owner, it must be removed first.");
+
+            if (_measure != null)
+                throw new InvalidOperationException("Cannot add child: Nodes with measure functions cannot have children.");
+
+            child.Owner = this;
+            _children.Add(child);
+
+            MarkDirty();
+        }
+
         public void Insert(int index, YogaNode child)
         {
             if (child.Owner != null)

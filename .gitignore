@@ -4,3 +4,6 @@ Marius.Yoga.Test/obj/
 Marius.Yoga/bin/
 Marius.Yoga/obj/
 /packages
+/Marius.Yoga.Forms/obj
+/Marius.Yoga.Forms/bin
+/Marius.Yoga.Forms/Marius.Yoga.Forms.csproj.user

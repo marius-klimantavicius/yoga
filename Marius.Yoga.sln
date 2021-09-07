@@ -1,11 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2035
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marius.Yoga", "Marius.Yoga\Marius.Yoga.csproj", "{9060957D-FF0B-4B14-BB87-EE24B5170365}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marius.Yoga", "Marius.Yoga\Marius.Yoga.csproj", "{9060957D-FF0B-4B14-BB87-EE24B5170365}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marius.Yoga.Test", "Marius.Yoga.Test\Marius.Yoga.Test.csproj", "{D352B9D8-ECFD-4E32-A86D-7EF3C13F8F0D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marius.Yoga.Forms", "Marius.Yoga.Forms\Marius.Yoga.Forms.csproj", "{BC1AB6DF-F415-40B2-99E9-82EE6AC3F2E4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4549B880-5960-4983-AC1C-65E0AED19CA7}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +28,10 @@ Global
 		{D352B9D8-ECFD-4E32-A86D-7EF3C13F8F0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D352B9D8-ECFD-4E32-A86D-7EF3C13F8F0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D352B9D8-ECFD-4E32-A86D-7EF3C13F8F0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC1AB6DF-F415-40B2-99E9-82EE6AC3F2E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC1AB6DF-F415-40B2-99E9-82EE6AC3F2E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC1AB6DF-F415-40B2-99E9-82EE6AC3F2E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC1AB6DF-F415-40B2-99E9-82EE6AC3F2E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
