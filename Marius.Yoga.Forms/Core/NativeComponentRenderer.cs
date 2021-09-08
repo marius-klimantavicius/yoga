@@ -10,8 +10,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "BL0006:Do not use RenderTree types", Justification = "")]
-
 namespace Microsoft.MobileBlazorBindings.Core
 {
     public abstract class NativeComponentRenderer : Renderer
