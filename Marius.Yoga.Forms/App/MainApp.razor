@@ -1,2 +1,27 @@
-﻿<Button Text="Hello"></Button>
-<Button Text="World" Left="300"></Button>
+﻿@if (_isSwapped)
+{
+    <Bliss @key="22">
+        <Button Text="Hello swapped" Width="100" Left="100"></Button>
+    </Bliss>
+    <Button @key="33" Text="World" Left="300"></Button>
+}
+else
+{
+    <Button @key="33" Text="World" Left="500"></Button>
+    <Bliss @key="22">
+        <Button Text="Hello" Left="100"></Button>
+    </Bliss>
+    <Button @key="11" Text="Hello2" Top="100"></Button>
+}
+<Button Text="Swap" Left="350" OnClick="DoSwap"></Button>
+
+@functions
+{
+    bool _isSwapped;
+
+    void DoSwap()
+    {
+        _isSwapped = !_isSwapped;
+    }
+
+}

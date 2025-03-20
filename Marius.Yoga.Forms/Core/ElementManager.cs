@@ -13,6 +13,7 @@ namespace Microsoft.MobileBlazorBindings.Core
     {
         public abstract void AddChildElement(IElementHandler parentHandler, IElementHandler childHandler, int physicalSiblingIndex);
         public abstract int GetChildElementIndex(IElementHandler parentHandler, IElementHandler childHandler);
+        public abstract void SetChildElementIndex(IElementHandler parentHandler, IElementHandler childHandler, int newIndex);
         public abstract bool IsParented(IElementHandler handler);
         public abstract bool IsParentOfChild(IElementHandler parentHandler, IElementHandler childHandler);
         public abstract void RemoveChildElement(IElementHandler parentHandler, IElementHandler childHandler);

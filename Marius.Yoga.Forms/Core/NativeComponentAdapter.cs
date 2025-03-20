@@ -61,6 +61,7 @@ namespace Microsoft.MobileBlazorBindings.Core
                 return;
             }
 
+            var permutationList = default(List<PermutationEntry>);
             foreach (var edit in edits)
             {
                 switch (edit.Type)
@@ -115,9 +116,13 @@ namespace Microsoft.MobileBlazorBindings.Core
                             break;
                         }
                     case RenderTreeEditType.PermutationListEntry:
-                        throw new NotImplementedException($"Not supported edit type: {edit.Type}");
+                        permutationList ??= new List<PermutationEntry>();
+                        permutationList.Add(new PermutationEntry(edit.SiblingIndex, edit.MoveToSiblingIndex));
+                        break;
                     case RenderTreeEditType.PermutationListEnd:
-                        throw new NotImplementedException($"Not supported edit type: {edit.Type}");
+                        ApplyPermutations(permutationList!);
+                        permutationList.Clear();
+                        break;
                     default:
                         throw new NotImplementedException($"Invalid edit type: {edit.Type}");
                 }
@@ -236,6 +241,21 @@ namespace Microsoft.MobileBlazorBindings.Core
                     }
                 default:
                     throw new NotImplementedException($"Not supported frame type: {frame.FrameType}");
+            }
+        }
+
+        private void ApplyPermutations(List<PermutationEntry> permutationList)
+        {
+            foreach (var item in permutationList)
+                item.MoveAdapter = Children[item.FromSiblingIndex];
+
+            permutationList.Sort((a, b) => a.ToSiblingIndex - b.ToSiblingIndex);
+
+            foreach (var item in permutationList)
+            {
+                //if (item.MoveAdapter._targetElement != null)
+                //    Renderer.ElementManager.SetChildElementIndex(_closestPhysicalParent, item.MoveAdapter._targetElement, item.ToSiblingIndex);
+                Children[item.ToSiblingIndex] = item.MoveAdapter;
             }
         }
 
@@ -457,6 +477,19 @@ namespace Microsoft.MobileBlazorBindings.Core
             if (_targetElement is IDisposable disposableTargetElement)
             {
                 disposableTargetElement.Dispose();
+            }
+        }
+
+        private class PermutationEntry
+        {
+            public int FromSiblingIndex { get; }
+            public int ToSiblingIndex { get; }
+            public NativeComponentAdapter MoveAdapter { get; set; }
+
+            public PermutationEntry(int fromSiblingIndex, int toSiblingIndex)
+            {
+                FromSiblingIndex = fromSiblingIndex;
+                ToSiblingIndex = toSiblingIndex;
             }
         }
     }

@@ -30,6 +30,11 @@ namespace Microsoft.MobileBlazorBindings.Core
             return GetChildElementIndex(ConvertToType(parentHandler, nameof(parentHandler)), ConvertToType(childHandler, nameof(childHandler)));
         }
 
+        public sealed override void SetChildElementIndex(IElementHandler parentHandler, IElementHandler childHandler, int newIndex)
+        {
+            SetChildElementIndex(ConvertToType(parentHandler, nameof(parentHandler)), ConvertToType(childHandler, nameof(childHandler)), newIndex);
+        }
+
         public sealed override bool IsParented(IElementHandler handler)
         {
             return IsParented(ConvertToType(handler, nameof(handler)));
@@ -47,6 +52,7 @@ namespace Microsoft.MobileBlazorBindings.Core
 
         protected abstract void AddChildElement(TElementType parentHandler, TElementType childHandler, int physicalSiblingIndex);
         protected abstract int GetChildElementIndex(TElementType parentHandler, TElementType childHandler);
+        protected abstract void SetChildElementIndex(TElementType parentHandler, TElementType childHandler, int newIndex);
         protected abstract bool IsParented(TElementType handler);
         protected abstract bool IsParentOfChild(TElementType parentHandler, TElementType childHandler);
         protected abstract void RemoveChildElement(TElementType parentHandler, TElementType childHandler);

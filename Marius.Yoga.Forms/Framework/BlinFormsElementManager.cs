@@ -34,6 +34,11 @@ namespace BlinForms.Framework
             return parentHandler.Control.Controls.GetChildIndex(childHandler.Control);
         }
 
+        protected override void SetChildElementIndex(IWindowsFormsControlHandler parentHandler, IWindowsFormsControlHandler childHandler, int newIndex)
+        {
+            parentHandler.Control.Controls.SetChildIndex(childHandler.Control, newIndex);
+        }
+
         protected override bool IsParented(IWindowsFormsControlHandler handler)
         {
             return handler.Control.Parent != null;
